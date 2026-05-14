@@ -1,0 +1,6 @@
+{
+  "energy_joules": 0.009533152123212811,
+  "information_gain_nats": 0.4910898940911531,
+  "model_type": "linear",
+  "data_shape": "(12,)"
+}

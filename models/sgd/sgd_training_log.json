@@ -1,0 +1,6 @@
+{
+  "energy_joules": 0.1433825426471948,
+  "information_gain_nats": -2.9405369156948113,
+  "model_type": "sgd",
+  "data_shape": "(12,)"
+}

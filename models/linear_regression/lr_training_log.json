@@ -1,0 +1,6 @@
+{
+  "energy_joules": 0.05070041607570648,
+  "information_gain_nats": -0.4477175624505968,
+  "model_type": "LinearRegression",
+  "data_shape": "(15,)"
+}
