@@ -1,0 +1,20 @@
+{
+  "structure": "200",
+  "seed": 263,
+  "target_r2": 0.86,
+  "max_epochs": 1000,
+  "learning_rate": 0.001,
+  "test_size": 0.1,
+  "stopped_early": false,
+  "final_epoch": 1000,
+  "total_energy_j": 1295.716089041409,
+  "best_val_r2": 0.7993666210031791,
+  "best_epoch": 845,
+  "final_val_r2": 0.773413997618065,
+  "final_info_gain": 0.7423153523309554,
+  "test_r2": 0.7823749940732447,
+  "test_mse": 3018084489.5539107,
+  "baseline_mse": 12722643943.787632,
+  "background_power_watts": 2.1578802,
+  "idle_duration": 10.0
+}
