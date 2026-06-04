@@ -74,8 +74,12 @@ class EnergyTracker:
         self.verbose = verbose
         self.domain = domain
         self.energy_path = f"/sys/class/powercap/intel-rapl:{domain}/energy_uj"
-        self._check_available()
-        self.background_power_watts = None
+        # 检查 RAPL 是否可用；如果不可用，则进入降级模式（不抛异常）
+        self.available = os.path.exists(self.energy_path)
+        if not self.available and verbose:
+            logging.warning(f"RAPL interface not found at {self.energy_path}. Energy tracking will be disabled (graceful fallback).")
+
+        self.background_power_watts = 0.0
         self.start_energy_uj = None
         self.start_time = None
         self.background_subtracted = False
@@ -89,16 +93,26 @@ class EnergyTracker:
             setup_logging(log_to_file=False)
 
     def _check_available(self):
-        if not os.path.exists(self.energy_path):
-            raise RuntimeError(f"RAPL interface not found: {self.energy_path}")
+        # 保留兼容接口，但不再抛出异常
+        return os.path.exists(self.energy_path)
 
     def _read_energy_uj(self):
-        with open(self.energy_path, 'r') as f:
-            return int(f.read().strip())
+        # 如果不可用，返回 0
+        if not self.available:
+            return 0
+        try:
+            with open(self.energy_path, 'r') as f:
+                return int(f.read().strip())
+        except Exception as e:
+            logging.warning(f"Failed to read energy file: {e}")
+            return 0
 
     def measure_background_power(self, duration=None):
         if duration is None:
             duration = self.idle_duration
+        if not self.available:
+            logging.warning("Background power measurement skipped: RAPL not available.")
+            return 0.0
         e1 = self._read_energy_uj()
         time.sleep(duration)
         e2 = self._read_energy_uj()
@@ -109,8 +123,11 @@ class EnergyTracker:
         return avg_power
 
     def __enter__(self):
-        if self.enable_background_removal:
+        # 如果不可用则不进行文件读写，仅记录起始时间
+        if self.enable_background_removal and self.available:
             self.background_power_watts = self.measure_background_power()
+        else:
+            self.background_power_watts = 0.0
         self.start_energy_uj = self._read_energy_uj()
         self.start_time = time.time()
         return self
@@ -119,15 +136,21 @@ class EnergyTracker:
         final_net = self.get_current_energy()
         self.net_energy_joules = final_net
         if self.verbose:
-            logging.info(f"Final net energy: {final_net:.3f} J")
+            if not self.available:
+                logging.info("Energy tracking disabled; net energy set to 0.0 J")
+            else:
+                logging.info(f"Final net energy: {final_net:.3f} J")
 
     def get_current_energy(self):
         """
         Returns net energy (J) from start to now, with background subtracted.
         Can be called multiple times during the measurement.
         """
-        if self.start_energy_uj is None:
-            raise RuntimeError("Called get_current_energy() before entering context")
+        # 如果启动前未设定 start_time，则返回 0
+        if self.start_time is None:
+            return 0.0
+        if not self.available:
+            return 0.0
         current_uj = self._read_energy_uj()
         elapsed_time = time.time() - self.start_time
         total_energy_joules = (current_uj - self.start_energy_uj) / 1_000_000.0
