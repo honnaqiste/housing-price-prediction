@@ -11,9 +11,11 @@ import streamlit as st
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT_DIR))
-MODEL_PATH = ROOT_DIR / 'models' / 'random_forest' / 'rf_model.joblib'
-PREPROCESSOR_PATH = ROOT_DIR / 'models' / 'random_forest' / 'preprocessor.joblib'
-FEATURE_IMPORTANCE_PATH = ROOT_DIR / 'models' / 'random_forest' / 'feature_importances.png'
+EXPRUN = ROOT_DIR / 'experiments' / 'exp1_model_comparison' / 'results' / 'random_forest' / 'run_1'
+MODEL_PATH = EXPRUN / 'model.joblib'
+PREPROCESSOR_PATH = EXPRUN / 'preprocessor.joblib'
+Y_SCALER_PATH = EXPRUN / 'y_scaler.joblib'
+FEATURE_IMPORTANCE_PATH = EXPRUN / 'feature_importances.png'
 
 missing_dependencies = []
 if importlib.util.find_spec('sklearn') is None:
@@ -88,6 +90,7 @@ with st.sidebar:
 
 model = None
 preprocessor = None
+y_scaler = None
 model_error = None
 preprocessor_error = None
 
@@ -116,12 +119,19 @@ else:
     except Exception as e:
         preprocessor_error = f'无法加载预处理器: {PREPROCESSOR_PATH}。错误: {e}'
 
+    try:
+        if not Y_SCALER_PATH.exists():
+            raise FileNotFoundError(f'y_scaler 文件不存在: {Y_SCALER_PATH}')
+        y_scaler = joblib.load(Y_SCALER_PATH)
+    except Exception as e:
+        y_scaler_error = f'无法加载 y_scaler: {Y_SCALER_PATH}。错误: {e}'
+
 if model_error:
     st.error(model_error)
 if preprocessor_error:
     st.error(preprocessor_error)
 
-if not model_error and not preprocessor_error:
+if not model_error and not preprocessor_error and y_scaler is not None:
     st.subheader('输入信息')
     st.write({
         '经度': longitude,
@@ -152,7 +162,8 @@ if not model_error and not preprocessor_error:
 
         try:
             X_proc = preprocessor.transform(sample)
-            prediction = model.predict(X_proc)[0]
+            pred_scaled = model.predict(X_proc).reshape(-1, 1)
+            prediction = y_scaler.inverse_transform(pred_scaled)[0, 0]
             st.markdown('### 预测结果')
             st.success(f'预测房价：{prediction:,.2f} 美元')
             st.write('预测结果基于已保存的随机森林模型和标准化预处理流程，仅供参考。')

@@ -26,16 +26,25 @@ sudo systemctl stop power-profiles-daemon 2>/dev/null || true
 # Optional: also stop NetworkManager if networking is not needed
 sudo systemctl stop NetworkManager
 sudo systemctl stop bluetooth
+sudo systemctl stop ssh 
+sudo systemctl stop ssh.socket
 
 # 4. Temporarily disable cron jobs
 echo "  Disabling cron/anacron temporary jobs..."
 sudo systemctl stop cron anacron 2>/dev/null || true
 
-# 5. Set CPU performance mode to 'performance' (reduce frequency scaling noise)
+# 5. Stop some service
+sudo systemctl stop nxserver
+sudo systemctl stop docker
+sudo systemctl stop docker.socket
+# sudo systemctl stop containerd 
+# sudo systemctl stop mihomo
+
+# 6. Set CPU performance mode to 'performance' (reduce frequency scaling noise)
 echo "  Setting CPU governor to performance..."
 sudo cpupower frequency-set -g performance 2>/dev/null || echo "  cpupower not installed, skipping"
 
-# 6. Run powertop --auto-tune to optimise power management (lower idle power consumption)
+# 7. Run powertop --auto-tune to optimise power management (lower idle power consumption)
 if command -v powertop &> /dev/null; then
     echo "  Running powertop --auto-tune ..."
     sudo powertop --auto-tune
@@ -43,7 +52,7 @@ else
     echo "  powertop not installed, skipping auto‑tune"
 fi
 
-# 7. Advise user to switch to a TTY
+# 8. Advise user to switch to a TTY
 echo "[PREPARE] Done! It is recommended to switch to a TTY (Ctrl+Alt+F3) before running the training script."
 echo "         If you switch, re‑run this script afterwards – it will clean up again (browsers will be gone without GUI)."
 sudo systemctl stop gdm3

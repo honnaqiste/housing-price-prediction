@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Experiment outputs (generated artifacts)
+results/
+*.joblib
+grid_search_*.csv
+grid_search_*.json
+grid_search_*.png
+run_code.sh

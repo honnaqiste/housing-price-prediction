@@ -4,6 +4,8 @@
 echo "[RESTORE] Restoring system services and settings..."
 sudo systemctl start gdm3
 sudo systemctl start bluetooth
+sudo systemctl start ssh
+sudo systemctl start ssh.socket
 
 # 1. Start stopped system services
 echo "  Starting system services..."
@@ -20,5 +22,12 @@ sudo cpupower frequency-set -g powersave 2>/dev/null || echo "  cpupower not ins
 echo "  Restarting file indexing services..."
 systemctl --user start tracker-miner-fs 2>/dev/null || true
 balooctl resume 2>/dev/null || true
+
+# 4. Start some service
+sudo systemctl start nxserver
+sudo systemctl start docker
+sudo systemctl stop docker.socket
+# sudo systemctl start containerd 
+# sudo systemctl start mihomo
 
 echo "[RESTORE] System has been restored."
