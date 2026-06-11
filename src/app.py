@@ -15,7 +15,6 @@ EXPRUN = ROOT_DIR / 'experiments' / 'exp1_model_comparison' / 'results' / 'rando
 MODEL_PATH = EXPRUN / 'model.joblib'
 PREPROCESSOR_PATH = EXPRUN / 'preprocessor.joblib'
 Y_SCALER_PATH = EXPRUN / 'y_scaler.joblib'
-FEATURE_IMPORTANCE_PATH = EXPRUN / 'feature_importances.png'
 
 missing_dependencies = []
 if importlib.util.find_spec('sklearn') is None:
@@ -172,11 +171,26 @@ if not model_error and not preprocessor_error and y_scaler is not None:
 
     st.markdown('---')
     st.subheader('特征重要性')
-    if FEATURE_IMPORTANCE_PATH.exists():
-        st.image(str(FEATURE_IMPORTANCE_PATH), caption='随机森林特征重要性', width=700)
-        st.info('随机森林模型显示“中位数收入（median_income）”是房价的最重要影响因素，说明收入水平与房价正相关。')
+    if model is not None:
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            feat_names = preprocessor.get_feature_names_out()
+            importances = model.feature_importances_
+            idx = np.argsort(importances)[::-1]
+            top_n = 10
+            plt.figure(figsize=(8, 4))
+            plt.barh(range(top_n), importances[idx][:top_n][::-1], color='#2196F3')
+            plt.yticks(range(top_n), [feat_names[i] for i in idx[:top_n]][::-1], fontsize=9)
+            plt.xlabel('Importance')
+            plt.title('Top {} Feature Importances (Random Forest)'.format(top_n))
+            plt.tight_layout()
+            st.pyplot(plt)
+            plt.close()
+        except Exception as e:
+            st.info('特征重要性加载失败: ' + str(e))
     else:
-        st.warning('未找到特征重要性图像文件，请先运行模型比较脚本生成 feature_importances.png。')
+        st.info('模型未加载，无法显示特征重要性。')
 
 st.sidebar.markdown('---')
 st.sidebar.write('若此页面加载失败，请确保使用与 Streamlit 相同的 Python 环境运行本应用。')
