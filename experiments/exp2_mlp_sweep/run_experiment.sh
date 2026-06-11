@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Experiment 2: MLP Architecture Comparison (5 structures)
+# Experiment 2: MLP Architecture Comparison (6 structures)
 # Each architecture uses its own best hyperparams from grid search.
-# 5 structures × 5 repeats = 25 runs.
+# 6 structures × 5 repeats = 30 runs.
 #
 # Usage:
 #   bash run_experiment.sh
@@ -25,14 +25,16 @@ N_REPEATS=5
 IDLE_DURATION=10
 COOLDOWN_SECS=30
 
-# ─── 5 architectures with their best hyperparams ──────────────
+# ─── 6 architectures with their best hyperparams ──────────────
 # format: "tag|hidden|activation|lr|alpha|batch_size"
+# Best configs from grid search:
 CONFIGS=(
+    "mlp_250x30|250,30|relu|0.0010|0.001|64"
     "mlp_128x64x32|128,64,32|tanh|0.0005|0.001|128"
-    "mlp_200x30|200,30|relu|0.0010|0.0001|64"
     "mlp_32x64x128|32,64,128|tanh|0.0005|0.001|128"
-    "mlp_50x40x30x20|50,40,30,20|tanh|0.0005|0.001|128"
-    "mlp_60x60x60|60,60,60|tanh|0.0005|0.001|128"
+    "mlp_70x70x70|70,70,70|tanh|0.0005|0.001|128"
+    "mlp_90x60x50x30|90,60,50,30|tanh|0.0005|0.001|64"
+    "mlp_40x150x40|40,150,40|tanh|0.0005|0.001|128"
 )
 
 # ─── Colours ──────────────────────────────────────────────────

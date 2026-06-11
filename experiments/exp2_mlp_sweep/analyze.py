@@ -22,11 +22,12 @@ R2_THRESHOLDS = [0.5, 0.75, 0.8]
 IG_THRESHOLDS = [-0.5 * np.log(max(1 - r, 1e-10)) for r in R2_THRESHOLDS]
 
 MODEL_META = {
-    "mlp_128x64x32":   {"label": "MLP (128,64,32)",   "color": "#E91E63", "marker": "D"},
-    "mlp_200x30":      {"label": "MLP (200,30)",      "color": "#4CAF50", "marker": "s"},
+    "mlp_250x30":      {"label": "MLP (250,30)",      "color": "#E91E63", "marker": "D"},
+    "mlp_128x64x32":   {"label": "MLP (128,64,32)",   "color": "#4CAF50", "marker": "s"},
     "mlp_32x64x128":   {"label": "MLP (32,64,128)",   "color": "#9C27B0", "marker": "v"},
-    "mlp_50x40x30x20": {"label": "MLP (50,40,30,20)", "color": "#FF9800", "marker": "p"},
-    "mlp_60x60x60":    {"label": "MLP (60,60,60)",    "color": "#00BCD4", "marker": "^"},
+    "mlp_70x70x70":    {"label": "MLP (70,70,70)",    "color": "#FF9800", "marker": "p"},
+    "mlp_90x60x50x30": {"label": "MLP (90,60,50,30)", "color": "#00BCD4", "marker": "^"},
+    "mlp_40x150x40":   {"label": "MLP (40,150,40)",   "color": "#FF5722", "marker": "h"},
 }
 
 
@@ -92,11 +93,18 @@ def main():
                     step_val = find_first_step(curve, "val_r2", th)
                     dr[f"step_to_r2_{th}"] = step_val
                     m[f"step_to_r2_{th}"] = step_val
-            # energy per epoch
+            # energy per epoch (from curve at best_epoch, not total)
             best_ep = m.get("best_epoch", np.nan)
-            if best_ep and best_ep > 0:
-                dr["energy_per_epoch"] = m["total_energy_j"] / best_ep
-                m["energy_per_epoch"] = m["total_energy_j"] / best_ep
+            energy_at_best = np.nan
+            if cf.exists() and not np.isnan(best_ep) and best_ep > 0:
+                curve = pd.read_csv(cf)
+                row = curve[curve["step"] == best_ep]
+                if not row.empty:
+                    energy_at_best = row.iloc[0]["cumulative_energy_j"]
+                    dr["energy_per_epoch"] = energy_at_best / best_ep
+                    dr["energy_at_best"] = energy_at_best
+                    m["energy_per_epoch"] = energy_at_best / best_ep
+                    m["energy_at_best"] = energy_at_best
             detail.append(dr)
 
         all_runs[tag] = runs
